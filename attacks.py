@@ -21,6 +21,8 @@ from tqdm import tqdm
 import torch.nn.functional as F
 import torchattacks
 from torchattacks import PGD
+"""
+# Incorporate if applying quantization as an attack. 
 from torch.ao.quantization.quantize_pt2e import (
     prepare_pt2e,
     convert_pt2e
@@ -30,6 +32,7 @@ from torch.ao.quantization.quantizer.xnnpack_quantizer import (
     XNNPACKQuantizer,
     get_symmetric_quantization_config,
 )
+"""
 
 import numpy as np
 
@@ -47,17 +50,13 @@ class DullDataset(Dataset):
         label=self.label
         return img,label
 
-device=(
-    "cuda"
-    if torch.cuda.is_available()
-    else "mps"
-    if torch.backends.mps.is_available()
-    else "cpu"
-)
-print(f"Using {device} device")
+# Using CPU device be default. 
+device=("cpu")
 
+# Default image size for ResNet-50 is 224*224, 
 H=224
 W=224
+
 batch_size=20
 
 loss_fn=nn.CrossEntropyLoss()
@@ -102,9 +101,8 @@ def test(dataloader,model,loss_fn):
     test_loss/=num_batches
     correct/=size
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
-    
-#test(test_dataloader,model,loss_fn)
 
+# Train all layers.
 def train(dataloader,model,loss_fn):
     local_model=copy.deepcopy(model)
     local_model.train()
@@ -125,6 +123,7 @@ def train(dataloader,model,loss_fn):
         loop.set_postfix(loss=loss.item(),acc=batch_acc)
     return local_model
 
+# Train the last layer. 
 def trainll(dataloader,model,loss_fn):
     local_model=copy.deepcopy(model)
     local_model.train()
@@ -146,6 +145,7 @@ def trainll(dataloader,model,loss_fn):
         loop.set_postfix(loss=loss.item(),acc=batch_acc)
     return local_model
 
+# Compute the functional difference of model1 and model2 on a collection of samples. 
 def diff(model1,model2,dataloader):
     size=len(dataloader.dataset)
     #model1.eval()
@@ -167,7 +167,6 @@ def diff(model1,model2,dataloader):
     print(diffs)
     return diffs
 
-#print(diff(model1,model2,test_dataloader))
 
 def gen_adv(model,dataloader):
     atk=PGD(model,eps=8/255,alpha=2/225,steps=10,random_start=True)
@@ -180,6 +179,7 @@ def gen_adv(model,dataloader):
             adv_images=torch.cat((adv_images,atk(X,y)))
     return adv_images
 
+# Prune the last layer. 
 def prune_fc(model,rate):
     local_model=copy.deepcopy(model)
     m=local_model.fc
@@ -190,6 +190,7 @@ def prune_fc(model,rate):
     #torch.save(local_model.state_dict(),path)
     return local_model
     
+# Prune the BN layers. 
 def prune_bn(model,rate):
     local_model=copy.deepcopy(model)
     ms=[]
@@ -205,6 +206,7 @@ def prune_bn(model,rate):
     #torch.save(local_model.state_dict(),path)
     return local_model
 
+"""
 # Runtime quantization.
 def quanti(model,dataloader):
     example_inputs=(next(iter(dataloader))[0],)
@@ -220,7 +222,9 @@ def quanti(model,dataloader):
             model_q(image)
     model_q=convert_pt2e(model_q)
     return model_q
-    
+"""  
+  
+# Knowledge distillation. 
 def distill(teacher,student,dataloader):
     student.train()
     optimizer=torch.optim.Adam(filter(lambda p:p.requires_grad,student.parameters()),lr=1e-5,weight_decay=5e-4)
@@ -239,6 +243,7 @@ def distill(teacher,student,dataloader):
     student.eval()
     return student
 
+# Handcrafted backdoor. 
 def hcbackdoor(model,dataloader,poisondata,delta):
     H=10
     attackedmodel=copy.deepcopy(model)
@@ -324,32 +329,6 @@ class Capsulated(nn.Module):
                 y[n][pi]=y[n][pi]+1000
         return y
     
-class LeNet(torch.nn.Module):
-    def __init__(self):
-        super(LeNet, self).__init__()
-        # 1 input image channel (black & white), 6 output channels, 5x5 square convolution
-        # kernel
-        self.conv1 = torch.nn.Conv2d(3,6,7)
-        self.conv2 = torch.nn.Conv2d(6,16,5)
-        # an affine operation: y = Wx + b
-        self.fc1 = torch.nn.Linear(43264,300)  # 6*6 from image dimension
-        self.fc2 = torch.nn.Linear(300,2)
-    def num_flat_features(self,x):
-        size = x.size()[1:]  # all dimensions except the batch dimension
-        num_features = 1
-        for s in size:
-            num_features*=s
-        return num_features
-    def forward(self,x):
-        # Max pooling over a (2, 2) window
-        x=F.max_pool2d(F.relu(self.conv1(x)),(2,2))
-        # If the size is a square you can only specify a single number
-        x=F.max_pool2d(F.relu(self.conv2(x)),2)
-        x=x.view(-1,self.num_flat_features(x))
-        x=F.relu(self.fc1(x))
-        x=self.fc2(x)
-        return x
-
 def DIFFS(model1,model2,loader1,loader2,loader3,loader4):
     d1=diff(model1,model2,loader1)
     d2=diff(model1,model2,loader2)
@@ -365,14 +344,6 @@ for param in f0.parameters():
     param.requires_grad=False
 f0.eval()
 
-f1=torchvision.models.resnet50(num_classes=10)
-state_dict1=torch.load("./model/resnet50-imagenette_lr=1e-5_epochs=19.pth")
-f1.load_state_dict(state_dict1,strict=True)
-for param in f1.parameters():
-    param.requires_grad=False
-f1.eval()
-
-#print(diff(model2,model3,test_dataloader))
 trainset=torchvision.datasets.Imagenette(root='./data', size="160px", split='train', download=False, transform=train_transforms)
 testset=torchvision.datasets.Imagenette(root='./data', size="160px", split='val', download=False, transform=test_transforms)
 #trainset=torchvision.datasets.CIFAR10(root='./data',train=True,download=False,transform=train_transforms)
@@ -402,7 +373,7 @@ poison_loader2=DataLoader(DullDataset(poisondata2),batch_size=batch_size,shuffle
 
 #trainset=torchvision.datasets.Imagenette(root='./data', size="160px", split='train', download=False, transform=ToTensor())
 
-"""
+
 # Fine-tuning test (all layers).
 f_ft=copy.deepcopy(f0)
 for i in range(10):
@@ -411,9 +382,7 @@ for i in range(10):
     f_ft.eval()
     l=DIFFS(f0,f_ft,normal_loader,noise_loader,adv_loader,U_loader)
     print("FTAL=%.3f,%f,%f,%f,%f"%(i,l[0],l[1],l[2],l[3]))
-"""
 
-"""
 # Fine-tuning test (layer layer).
 f_ft=copy.deepcopy(f0)
 for i in range(10):
@@ -422,18 +391,14 @@ for i in range(10):
     f_ft.eval()
     l=DIFFS(f0,f_ft,normal_loader,noise_loader,adv_loader,U_loader)
     print("FTAL=%.3f,%f,%f,%f,%f"%(i,l[0],l[1],l[2],l[3]))
-"""
 
-"""
 # Neuron-pruning test (FC layer).
 for i in range(9):
     f_np=prune_bn(f0,0.02*(i+1))
     f_np.eval()
     l=DIFFS(f0,f_np,normal_loader,noise_loader,adv_loader,U_loader)
     print("NPLL=%.3f,%f,%f,%f,%f"%(0.1*(i+1),l[0],l[1],l[2],l[3]))
-"""
 
-"""
 # Fine-pruning
 for i in np.arange(0.01,0.21,0.01):
     f_npal=prune_bn(f0,i)
@@ -443,7 +408,6 @@ for i in np.arange(0.01,0.21,0.01):
     print(i)
     l=DIFFS(f0,f_fp,normal_loader,noise_loader,adv_loader,U_loader)
     print("FP-%.3f,%f,%f,%f,%f"%(i,l[0],l[1],l[2],l[3]))
-"""
 
 # Distill
 student=torchvision.models.resnet50(num_classes=10)
@@ -465,7 +429,6 @@ for i in range(10):
     l=DIFFS(f0,student,normal_loader,noise_loader,adv_loader,U_loader)
     print("Distill-%.3f,%f,%f,%f,%f"%(i,l[0],l[1],l[2],l[3])) 
 
-"""
 # Poisoning
 f_poisoned=copy.deepcopy(f0)
 for i in range(10):
@@ -602,10 +565,3 @@ for i in range(4):
         Cap1=Capsulated(f0,Cap)
         l=DIFFS(f0,Cap1,normal_loader,noise_loader,adv_loader,U_loader)
         print("Cap-%.3f,%f,%f,%f,%f"%(i,l[0],l[1],l[2],l[3]))
-"""
-
-
-
-
-
-
