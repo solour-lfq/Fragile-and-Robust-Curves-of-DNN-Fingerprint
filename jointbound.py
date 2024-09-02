@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Jul 15 19:51:32 2024
-
-@author: l50040903
-"""
-
 from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
