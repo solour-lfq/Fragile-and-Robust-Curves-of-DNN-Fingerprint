@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Jul 10 15:53:42 2024
-
-@author: l50040903
-"""
-
 import matplotlib.pyplot as plt
 import numpy as np
 plt.rcParams['text.usetex'] = True
