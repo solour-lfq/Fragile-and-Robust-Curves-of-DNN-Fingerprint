@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Jul 22 08:50:18 2024
-
-@author: l50040903
-"""
 import torch
 import torchvision
 from torch import nn
