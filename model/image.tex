@@ -1,0 +1,71 @@
+\documentclass{article}
+\usepackage{amssymb}
+% main document, called main.tex
+\usepackage{tikz}
+\usepackage{CJKutf8}
+\usepackage{comment}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{external}
+\usetikzlibrary{patterns}
+\usepackage{bbding}
+\usepackage[pdftex,active,tightpage]{preview}
+\setlength\PreviewBorder{0mm}
+\PreviewEnvironment{tikzpicture}
+%\tikzexternalize[prefix=figures/] % activate!
+\begin{document}
+\begin{CJK}{UTF8}{gbsn}
+\begin{tikzpicture}
+%\draw [white] (-1,4) rectangle (10,-2);
+
+\draw [dashed,rounded corners,ultra thick,blue!50!white,fill=blue!20!white] (-1.7,5.5) rectangle (2.5,0.8);
+\draw [dashed,rounded corners,ultra thick,red!50!white,fill=red!20!white] (2.5,5.5) rectangle (11.7,0.8);
+%\draw [dashed,rounded corners,ultra thick,gray!50!white,fill=gray!20!white] (1.25,0.8) rectangle (2.5,2.85);
+
+\node at (0,0.15) {\includegraphics[width=1cm]{../elements/user.png}};
+\node at (1.25,2) {\includegraphics[width=1.2cm]{../elements/triggers.pdf}};
+\node at (1.25,1.2) {\textbf{Triggers} $\mathbf{T}$};
+\node at (0,4.5) {\includegraphics[width=2cm]{../elements/network.pdf}};
+\node at (0,3.4) {\textbf{Original model} $f$};
+\draw [-latex,ultra thick,rounded corners] (0.75,2)--(0,2)--(0,3.2);
+\draw [-latex,ultra thick] (0,5.3)--(0,5.9);
+\node [scale=1.2] at (0+0.52,6.3) {=$f(\mathbf{T})$};
+\node at (0-0.52,6.3) {\includegraphics[width=0.7cm]{../elements/fingerprint1.png}};
+\draw [-latex,ultra thick,blue] (1,4.5)--(4,4.5);
+\node [blue] at (2.5,4.7) {\textbf{Distribute}};
+\node at (5,4.5) {\includegraphics[width=2cm]{../elements/network.pdf}};
+\node at (5,3.4) {\textbf{Purchased model} $f$};
+\draw [red,-latex,ultra thick] (6,4.5)--(9,4.5);
+\node [red] at (7.5,4.7) {\textbf{Modify}};
+\node at (10,4.5) {\includegraphics[width=2cm]{../elements/suspectnetwork.pdf}};
+\node [red] at (10,3.4) {\textbf{Modified model} $f_{A}$};
+\node at (7.5-2.7,0.15) {\includegraphics[width=1cm]{../elements/hacker.png}};
+\draw [-latex,rounded corners,ultra thick] (1.75,2)--(10,2)--(10,3.2);
+\node [scale=1] at (5.9,2.2) {\textbf{Query}};
+\draw [-latex,ultra thick] (10,5.3)--(10,5.9);
+\node [scale=1.2] at (10+0.52,6.3) {=$f_{A}(\mathbf{T})$};
+\node at (10-0.52,6.3) {\includegraphics[width=0.7cm]{../elements/fingerprint2.png}};
+\node at (7.5-2+0.5,1.3-1.15) {\includegraphics[width=0.8cm]{../elements/horn.pdf}};
+\node [scale=1.2,black] at (7.5+0.5+0.9,1.3-1.15) {\textbf{I deployed a service!}};
+%\node at (7.5+0.5+0.5,1.3-0.17-1.15) {\textbf{authorized by Alice!}};
+\node [scale=1.3,blue] at (0,-0.7) {\textbf{Defender}};
+\node [scale=1.3,red] at (7.5-2.7,-0.7) {\textbf{Adversary}};
+
+\node at (8.4,8.3) {\includegraphics[width=5.6cm,height=1.2cm]{./speech-bubble.png}};
+
+\node at (5,6.7) {\includegraphics[width=1cm]{../elements/fingerprint3.png}};
+\draw [-latex,ultra thick] (1.4,6.3)--(5-0.7,6.3);
+\draw [-latex,ultra thick] (10-1.4,6.3)--(5+0.7,6.3);
+\node [scale=0.9] at (5.1,5.9) {\textbf{Compare} $f(\mathbf{T})$ \textbf{with} $f_{A}(\mathbf{T})$.};
+\draw [-latex,ultra thick] (5,7.3)--(5,7.75);
+%\draw [ultra thick,rounded corners,fill=yellow] (5-2.25,8.1-0.35) rectangle (5+2.25,8.1+0.35);
+%\node [scale=1] at (5,8.1) {\textbf{Copyright alert !}};
+\draw [line width=3pt,rounded corners,fill=yellow] (5,8.1-0.35)--(5-0.8,8.1-0.35)--(5,9)--(5+0.8,8.1-0.35)--(5,8.1-0.35);
+\node [scale=2] at (5,8.2) {\textbf{!}};
+\node at (8.7,8.3+0.25) {\textbf{Copyright infringement/}};
+\node at (8.7,8.3-0.25) {\textbf{Integrity violation}};
+
+
+
+\end{tikzpicture}
+\end{CJK}
+\end{document}
